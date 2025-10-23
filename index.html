@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Analytics Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #06b6d4;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card.primary .icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .stat-card.success .icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .stat-card.warning .icon {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .stat-card.info .icon {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+        }
+
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            margin-bottom: 2rem;
+        }
+
+        .chart-card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            overflow-x: auto;
+        }
+
+        .table-card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .table {
+            margin: 0;
+        }
+
+        .table thead th {
+            background: var(--light-color);
+            color: var(--dark-color);
+            font-weight: 600;
+            border: none;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+        }
+
+        .loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .error-message {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .error-message i {
+            font-size: 3rem;
+            color: var(--danger-color);
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card .value {
+                font-size: 1.5rem;
+            }
+            
+            .chart-card, .table-card {
+                padding: 1rem;
+            }
+        }
+
+        .product-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .product-laptop {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .product-phone {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .product-tablet {
+            background: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-chart-line me-2"></i>Sales Analytics Dashboard</h1>
+            <p>Real-time insights from your sales data</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading analytics data...</p>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Stats Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card primary">
+                        <div class="icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <h3>Total Revenue</h3>
+                        <p class="value" id="totalRevenue">$0</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card success">
+                        <div class="icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <h3>Total Quantity</h3>
+                        <p class="value" id="totalQuantity">0</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card warning">
+                        <div class="icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h3>Products</h3>
+                        <p class="value" id="productCount">0</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="stat-card info">
+                        <div class="icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Avg Revenue</h3>
+                        <p class="value" id="avgRevenue">$0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <h2><i class="fas fa-chart-pie me-2"></i>Revenue by Product</h2>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="chart-card">
+                        <h2><i class="fas fa-chart-bar me-2"></i>Quantity by Product</h2>
+                        <canvas id="quantityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Row -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-card">
+                        <h2><i class="fas fa-table me-2"></i>Product Details</h2>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Total Revenue</th>
+                                    <th>Total Quantity</th>
+                                    <th>Avg Price</th>
+                                    <th>Revenue Share</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error" style="display: none;">
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Data</h3>
+                <p id="errorText">Unable to load analytics data. Please try again later.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch and display data
+        async function loadData() {
+            try {
+                // Try to fetch result.json from the same directory
+                const response = await fetch('result.json');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                
+                const data = await response.json();
+                displayDashboard(data);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Use fallback data for demonstration
+                const fallbackData = {
+                    "revenue_by_product": {
+                        "Laptop": 8000,
+                        "Phone": 12000,
+                        "Tablet": 4500
+                    },
+                    "quantity_by_product": {
+                        "Laptop": 8,
+                        "Phone": 15,
+                        "Tablet": 9
+                    },
+                    "total_revenue": 24500,
+                    "total_quantity": 32
+                };
+                displayDashboard(fallbackData);
+            }
+        }
+
+        function displayDashboard(data) {
+            // Hide loading, show dashboard
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            // Update stats
+            document.getElementById('totalRevenue').textContent = '$' + data.total_revenue.toLocaleString();
+            document.getElementById('totalQuantity').textContent = data.total_quantity.toLocaleString();
+            document.getElementById('productCount').textContent = Object.keys(data.revenue_by_product).length;
+            
+            const avgRevenue = data.total_revenue / Object.keys(data.revenue_by_product).length;
+            document.getElementById('avgRevenue').textContent = '$' + avgRevenue.toLocaleString(undefined, {maximumFractionDigits: 0});
+
+            // Prepare chart data
+            const products = Object.keys(data.revenue_by_product);
+            const revenues = Object.values(data.revenue_by_product);
+            const quantities = Object.values(data.quantity_by_product);
+
+            // Color scheme
+            const colors = [
+                'rgba(79, 70, 229, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(6, 182, 212, 0.8)'
+            ];
+
+            const borderColors = [
+                'rgba(79, 70, 229, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(245, 158, 11, 1)',
+                'rgba(239, 68, 68, 1)',
+                'rgba(6, 182, 212, 1)'
+            ];
+
+            // Revenue Chart (Pie)
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'pie',
+                data: {
+                    labels: products,
+                    datasets: [{
+                        data: revenues,
+                        backgroundColor: colors,
+                        borderColor: borderColors,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: $${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Quantity Chart (Bar)
+            const quantityCtx = document.getElementById('quantityChart').getContext('2d');
+            new Chart(quantityCtx, {
+                type: 'bar',
+                data: {
+                    labels: products,
+                    datasets: [{
+                        label: 'Quantity Sold',
+                        data: quantities,
+                        backgroundColor: colors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Quantity: ${context.parsed.y.toLocaleString()} units`;
